@@ -12,6 +12,7 @@ var UP = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+var conns []*websocket.Conn
 
 func handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := UP.Upgrade(w, r, nil)
@@ -19,6 +20,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		log.Println("upgrade err:", err)
 		return
 	}
+	conns = append(conns, conn)
 	for {
 		_, p, err := conn.ReadMessage()
 		if err != nil {
@@ -27,6 +29,10 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			}
 			break
 		}
+		for i := range conns {
+			conns[i].WriteMessage(websocket.TextMessage, []byte("Server收到了您的消息,您说的是:"+string(p)))
+		}
+
 		fmt.Println(string(p))
 	}
 	defer conn.Close()
