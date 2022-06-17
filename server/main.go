@@ -16,16 +16,18 @@ var UP = websocket.Upgrader{
 func handle(w http.ResponseWriter, r *http.Request) {
 	conn, err := UP.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("upgrade err:", err)
 		return
 	}
 	for {
-		m, p, err := conn.ReadMessage()
+		_, p, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
 			break
 		}
-		fmt.Println(m, string(p))
+		fmt.Println(string(p))
 	}
 	defer conn.Close()
 	log.Println("服务关闭")
